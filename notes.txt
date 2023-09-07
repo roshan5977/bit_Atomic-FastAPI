@@ -1,0 +1,20 @@
+/user                   /get   /put   
+/registeruser          post
+/resetpassword          /patch
+/userstatus            /patch
+authenticateuser      /post
+/verififyotp          /get
+/sendotp           /post
+
+
+
+/pomodorotasks   /get /post /delete
+
+
+
+
+/getallpomodorotasks    /get
+
+/habit           / post /patch
+   
+/getallhabits           get 
