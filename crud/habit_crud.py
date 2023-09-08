@@ -33,6 +33,8 @@ def get_all_habits(db: Session, skip: int = 0, limit: int = 10):
     return db.query(Habit).offset(skip).limit(limit).options(selectinload(Habit.habit_analysis)).all()
 
 # update habit
+
+
 def update_habit(db: Session, habit: HabitCreate):
     db_habit = db.query(Habit).filter(
         Habit.habit_id == habit.habit_id).first()
@@ -61,6 +63,8 @@ def save_habitanalytics(db: Session, HabitAnalysiscreating: HabitAnalysisCreate)
     return habit_analytics_everyday
 
 # get all habit analytics by habitid
-def get_all_habits_analytics(db: Session, skip: int = 0, limit: int = 10, habitid: int = 1):
+
+
+def get_all_habits_analytics(db: Session, skip: int = 0, limit: int = 10, habit_id: int = 1):
     return db.query(HabitAnalysis).filter(
-        HabitAnalysis.habit_id == habitid).offset(skip).limit(limit).all()
+        HabitAnalysis.habit_id == habit_id).offset(skip).limit(limit).all()

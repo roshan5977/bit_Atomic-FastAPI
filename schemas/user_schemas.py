@@ -14,6 +14,10 @@ class UserCreate(UserBase):
     updated_by: str
 
 
+class UserLogin(BaseModel):
+    email: str
+    password: str
+
 
 class User(UserBase):
     id: int

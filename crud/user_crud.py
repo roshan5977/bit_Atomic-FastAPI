@@ -7,6 +7,12 @@ from schemas.user_schemas import UserCreate
 def get_user(db: Session, user_id: int):
     return db.query(User).filter(User.id == user_id).first()
 
+# geting user by usermail
+
+
+def get_user_byemail(db: Session, email: str):
+    return db.query(User).filter(User.email == email).first()
+
 
 # save user
 def save_user(db: Session, user: UserCreate):
@@ -37,4 +43,10 @@ def get_all_users(db: Session, skip: int = 0, limit: int = 10):
     return db.query(User).offset(skip).limit(limit).all()
 
 
-# patch user by userid
+# deactivate user by userid
+def deactivate_user(db: Session, user_id: int):
+    user = db.query(User).filter(User.id == user_id).first()
+    user.is_active = False
+    db.commit()
+    db.refresh(user)
+    return user

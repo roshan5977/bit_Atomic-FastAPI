@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from sqlalchemy.orm import Session
 import model
 import schemas.pomodoro_task_schemas as pomodoro_task_schemas
@@ -35,15 +35,10 @@ def test():
     return {"status": "success"}
 
 
-# ______________________________user api________________________________________________
-
-
 # register user
 @app.post("/user/saveusers/", response_model=user_schemas.User)
 def create_user(user: user_schemas.UserCreate, db: Session = Depends(get_db)):
-    print(user.email, '================================')
-    # db_user = user_cruds.get_user(db, email=user)
-    # print(db_user, '================================')
+    # db_user = user_cruds.get_user_byemail(db, email=user)
     # if db_user:
     #     raise HTTPException(status_code=400, detail="Email already registered")
     return user_cruds.save_user(db=db, user=user)
@@ -58,19 +53,25 @@ def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
 
 
 # get user by userid
-# @app.get("/user/{user_id}", response_model=UserSchema.User)
-# def read_user(user_id: int, db: Session = Depends(get_db)):
-#     db_user = user_crud.get_user(db, user_id=user_id)
-#     if db_user is None:
-#         raise HTTPException(status_code=404, detail="User not found")
-#     return db_user
+@app.get("/user/{user_id}", response_model=user_schemas.User)
+def read_user(user_id: int, db: Session = Depends(get_db)):
+    db_user = user_cruds.get_user(db, user_id=user_id)
+    if db_user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    return db_user
 
 
 # login user
+@app.post("/user/login/", response_model=user_schemas.User)
+def login_user(user: user_schemas.UserLogin, db: Session = Depends(get_db)):
+    pass
 
 # deactive user
 
-# _____________________________________habit api _____________________________________________________
+
+@app.patch("/users/deactivate/{user_id}", response_model=user_schemas.User)
+def deactive_user(user_id: int, db: Session = Depends(get_db)):
+    return user_cruds.deactivate_user(db=db, user_id=user_id)
 
 
 # ->  save habit
@@ -102,7 +103,7 @@ def create_habit(habit_analystics_create: habit_schemas.HabitAnalysisCreate, db:
 #  ->get all habit analytics for habitid
 
 
-@app.get("/habitanalytics/getallhabits/{habit_id}", response_model=list[habit_schemas.HabitAnalytics])
+@app.get("/habitanalytics/getallhabits/{habit_id}", response_model=list[habit_schemas.HabitAnalysis])
 def read_users(habit_id: int, skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     habits = habit_cruds.get_all_habits_analytics(
         db=db, skip=skip, limit=limit, habit_id=habit_id)
@@ -110,14 +111,12 @@ def read_users(habit_id: int, skip: int = 0, limit: int = 100, db: Session = Dep
 
 
 # ->  save pomodoro task
-
-
 @app.post("/pomodoro/savetask/", response_model=pomodoro_task_schemas.PomodoroTask)
 def create_habit(pomodoro: pomodoro_task_schemas.PomodoroTaskCreate, db: Session = Depends(get_db)):
     return pomodoro_task_cruds.save_task(db=db, pomodoro=pomodoro)
 
 
-# get pomodoro_task by id
+# get pomodoro_task by userid
 @app.get("/pomodoro/gettask/{user_id}", response_model=list[pomodoro_task_schemas.PomodoroTask])
 def read_task(user_id: int, db: Session = Depends(get_db)):
     db_task = pomodoro_task_cruds.get_tasks(db, user_id=user_id)
@@ -131,7 +130,7 @@ def change_is_tasks_complete(p_id: int, db: Session = Depends(get_db)):
     db_task = pomodoro_task_cruds.change_is_tasks_complete(db, p_id=p_id)
     return db_task
 
-# delete pomodorotasks
+# delete pomodorotasks by pomodoro_task_id
 
 
 @app.delete("/pomodoro/deletetasks/{p_id}", response_model=str)
