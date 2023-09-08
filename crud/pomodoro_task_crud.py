@@ -1,12 +1,10 @@
 from sqlalchemy.orm import Session
 from model.pomodoro_task import PomodoroTask
-from schemas.pomodoro_task_schemas import PomodoroSchema, PomodoroTaskCreate
+from schemas.pomodoro_task_schemas import PomodoroTaskCreate
 
 # geting user by userid
-
-
 def get_tasks(db: Session, user_id: int):
-    return db.query(PomodoroTask).filter(PomodoroTask.user_id == user_id and PomodoroTask.is_completed == False).all()
+    return db.query(PomodoroTask).filter(PomodoroTask.user_id == user_id).all()
 
 
 # save pomodorotask
@@ -21,10 +19,20 @@ def save_task(db: Session, pomodoro: PomodoroTaskCreate):
     return db_pomo_task
 
 
-# # delete user by userid
+# delete user by userid
+def delete_tasks(db: Session, p_id: int):
+    db.query(PomodoroTask).filter(PomodoroTask.p_id == p_id).delete()
+    db.commit()
+    return "deleted"+p_id
 
-# # def delete_user(db: Session, user_id: int):
-# #     return db.query(User).filter(User.id == user_id).first()
 
-
-# # patch tasks to completeas true
+# patch tasks to completeas true
+def change_is_tasks_complete(db: Session, p_id: int):
+    pomodoroTask = db.query(PomodoroTask).filter(
+        PomodoroTask.p_id == p_id).first()
+    if not pomodoroTask:
+        return None
+    pomodoroTask.is_completed = True
+    db.commit()
+    db.refresh(pomodoroTask)
+    return pomodoroTask

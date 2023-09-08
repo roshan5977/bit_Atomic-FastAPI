@@ -6,8 +6,8 @@ from database import Base
 class PomodoroTask(Base):
     __tablename__ = 'pomodoro_task'
 
-    p_id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, primary_key=True)
+    p_id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer)
     task_name = Column(String)
     task_date_time_scheduled = Column(DateTime)
     is_completed = Column(Boolean)

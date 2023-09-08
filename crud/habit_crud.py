@@ -4,8 +4,7 @@ from model.habit import Habit, HabitAnalysis
 from schemas.habit_schemas import HabitCreate, HabitAnalysisCreate
 
 
-# /post
-# save user
+# save habit
 def save_habit(db: Session, habit: HabitCreate):
     new_habit = Habit(
         user_id=habit.user_id,
@@ -27,18 +26,25 @@ def save_habit(db: Session, habit: HabitCreate):
     db.refresh(new_habit)
     return new_habit
 
-
-# patch       ispending
-
-
-# getallhabit
-# geting all habits by skip and limit
+# get all habits
 
 
 def get_all_habits(db: Session, skip: int = 0, limit: int = 10):
     return db.query(Habit).offset(skip).limit(limit).options(selectinload(Habit.habit_analysis)).all()
 
+# update habit
+def update_habit(db: Session, habit: HabitCreate):
+    db_habit = db.query(Habit).filter(
+        Habit.habit_id == habit.habit_id).first()
+    db.add(db_habit)
+    db.commit()
+    db.refresh(db_habit)
+    if db_habit is None:
+        raise Exception(status_code=404, detail="Habit not found")
+    return db_habit
 
+
+# save habit analysis
 def save_habitanalytics(db: Session, HabitAnalysiscreating: HabitAnalysisCreate):
     db_habit = db.query(Habit).filter(
         Habit.habit_id == HabitAnalysiscreating.habit_id).first()
@@ -54,6 +60,7 @@ def save_habitanalytics(db: Session, HabitAnalysiscreating: HabitAnalysisCreate)
     db.refresh(habit_analytics_everyday)
     return habit_analytics_everyday
 
-
+# get all habit analytics by habitid
 def get_all_habits_analytics(db: Session, skip: int = 0, limit: int = 10, habitid: int = 1):
-    return db.query(Habit).offset(skip).limit(limit).all()
+    return db.query(HabitAnalysis).filter(
+        HabitAnalysis.habit_id == habitid).offset(skip).limit(limit).all()

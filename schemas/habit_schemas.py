@@ -1,5 +1,23 @@
 from pydantic import BaseModel
 from datetime import datetime, time
+from typing import List
+
+
+class HabitAnalysisBase(BaseModel):
+    habit_date: datetime
+    is_performed: bool
+    habit_id: int
+
+
+class HabitAnalysisCreate(HabitAnalysisBase):
+    pass
+
+
+class HabitAnalysis(HabitAnalysisBase):
+    habit_analysis_id: int
+
+    class Config:
+        orm_mode = True
 
 
 class HabitBase(BaseModel):
@@ -24,23 +42,7 @@ class HabitCreate(HabitBase):
 
 class Habit(HabitBase):
     habit_id: int
-
-    class Config:
-        orm_mode = True
-
-
-class HabitAnalysisBase(BaseModel):
-    habit_date: datetime
-    is_performed: bool
-    habit_id: int
-
-
-class HabitAnalysisCreate(HabitAnalysisBase):
-    pass
-
-
-class HabitAnalysis(HabitAnalysisBase):
-    habit_analysis_id: int
+    habit_analysis: List[HabitAnalysis]
 
     class Config:
         orm_mode = True
