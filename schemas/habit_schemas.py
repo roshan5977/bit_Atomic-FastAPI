@@ -32,6 +32,7 @@ class Habit(HabitBase):
 class HabitAnalysisBase(BaseModel):
     habit_date: datetime
     is_performed: bool
+    habit_id: int
 
 
 class HabitAnalysisCreate(HabitAnalysisBase):
@@ -40,7 +41,6 @@ class HabitAnalysisCreate(HabitAnalysisBase):
 
 class HabitAnalysis(HabitAnalysisBase):
     habit_analysis_id: int
-    habit_id: int
 
     class Config:
         orm_mode = True

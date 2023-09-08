@@ -1,6 +1,7 @@
+from sqlalchemy.orm import selectinload
 from sqlalchemy.orm import Session
 from model.habit import Habit, HabitAnalysis
-from schemas.habit_schemas import HabitCreate
+from schemas.habit_schemas import HabitCreate, HabitAnalysisCreate
 
 
 # /post
@@ -33,5 +34,26 @@ def save_habit(db: Session, habit: HabitCreate):
 # getallhabit
 # geting all habits by skip and limit
 
+
 def get_all_habits(db: Session, skip: int = 0, limit: int = 10):
+    return db.query(Habit).offset(skip).limit(limit).options(selectinload(Habit.habit_analysis)).all()
+
+
+def save_habitanalytics(db: Session, HabitAnalysiscreating: HabitAnalysisCreate):
+    db_habit = db.query(Habit).filter(
+        Habit.habit_id == HabitAnalysiscreating.habit_id).first()
+    if db_habit is None:
+        raise Exception(status_code=404, detail="Habit not found")
+    habit_analytics_everyday = HabitAnalysis(
+        habit_date=HabitAnalysiscreating.habit_date,
+        is_performed=HabitAnalysiscreating.is_performed,
+        habit_id=HabitAnalysiscreating.habit_id
+    )
+    db.add(habit_analytics_everyday)
+    db.commit()
+    db.refresh(habit_analytics_everyday)
+    return habit_analytics_everyday
+
+
+def get_all_habits_analytics(db: Session, skip: int = 0, limit: int = 10, habitid: int = 1):
     return db.query(Habit).offset(skip).limit(limit).all()

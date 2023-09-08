@@ -22,7 +22,8 @@ class Habit(Base):
     current_streak = Column(Integer)
     habit_score = Column(Integer)
 
-    habit_analysis = relationship("HabitAnalysis", back_populates="habit")
+    habit_analysis = relationship(
+        "HabitAnalysis", back_populates="habit", lazy="selectin")
 
 
 class HabitAnalysis(Base):
