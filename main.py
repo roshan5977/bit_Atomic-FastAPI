@@ -87,22 +87,16 @@ def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return habits
 
 # -> update habit
-
-
 @app.post("/habit/updatehabit/", response_model=habit_schemas.Habit)
 def update_habit(habit: habit_schemas.HabitCreate, db: Session = Depends(get_db)):
     return habit_cruds.update_habit(db=db, habit=habit)
 
 # -> save habit analytics
-
-
 @app.post("/habitanalytics/savehabitanalytics/", response_model=habit_schemas.HabitAnalysisCreate)
 def create_habit(habit_analystics_create: habit_schemas.HabitAnalysisCreate, db: Session = Depends(get_db)):
     return habit_cruds.save_habitanalytics(db=db, HabitAnalysiscreating=habit_analystics_create)
 
 #  ->get all habit analytics for habitid
-
-
 @app.get("/habitanalytics/getallhabits/{habit_id}", response_model=list[habit_schemas.HabitAnalysis])
 def read_users(habit_id: int, skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     habits = habit_cruds.get_all_habits_analytics(
@@ -123,16 +117,12 @@ def read_task(user_id: int, db: Session = Depends(get_db)):
     return db_task
 
 # change pomodoro_task to completed task
-
-
 @app.patch("/pomodoro/iscompleted/{p_id}", response_model=pomodoro_task_schemas.PomodoroTask)
 def change_is_tasks_complete(p_id: int, db: Session = Depends(get_db)):
     db_task = pomodoro_task_cruds.change_is_tasks_complete(db, p_id=p_id)
     return db_task
 
 # delete pomodorotasks by pomodoro_task_id
-
-
 @app.delete("/pomodoro/deletetasks/{p_id}", response_model=str)
 def delete_tasks(p_id: int, db: Session = Depends(get_db)):
     db_task = pomodoro_task_cruds.delete_tasks(db, p_id=p_id)
