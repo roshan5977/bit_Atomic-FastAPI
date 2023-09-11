@@ -1,15 +1,18 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends, status
 from sqlalchemy.orm import Session
 import model
+from datetime import datetime, timedelta
 import schemas.pomodoro_task_schemas as pomodoro_task_schemas
 import schemas.user_schemas as user_schemas
 import schemas.habit_schemas as habit_schemas
 import crud.pomodoro_task_crud as pomodoro_task_cruds
 import crud.user_crud as user_cruds
 import crud.habit_crud as habit_cruds
-from fastapi import Depends, FastAPI
 from database import SessionLocal, engine
-
+from typing import Annotated
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from jose import JWTError, jwt
+from fastapi.middleware.cors import CORSMiddleware
 
 # creating tables in database
 model.user.Base.metadata.create_all(bind=engine)
@@ -29,6 +32,21 @@ def get_db():
         db.close()
 
 
+origins = [
+    "http://localhost.tiangolo.com",
+    "http://localhost",
+    "http://localhost:8080",
+]
+# Cors error handling
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
 # Test
 @app.get("/")
 def test():
@@ -38,6 +56,7 @@ def test():
 # register user
 @app.post("/user/saveusers/", response_model=user_schemas.User)
 def create_user(user: user_schemas.UserCreate, db: Session = Depends(get_db)):
+    user.password = user_cruds.get_password_hash(user.password)
     # db_user = user_cruds.get_user_byemail(db, email=user)
     # if db_user:
     #     raise HTTPException(status_code=400, detail="Email already registered")
@@ -62,9 +81,23 @@ def read_user(user_id: int, db: Session = Depends(get_db)):
 
 
 # login user
-@app.post("/user/login/", response_model=user_schemas.User)
-def login_user(user: user_schemas.UserLogin, db: Session = Depends(get_db)):
-    pass
+@app.post("/user/login/", response_model=str)
+def login_user(user_cred: user_schemas.UserLogin, db: Session = Depends(get_db)):
+    user = user_cruds.authenticate_user(
+        user_cred.email, user_cred.password, db)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    access_token_expires = timedelta(
+        minutes=user_cruds.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = user_cruds.create_access_token(
+        data={"sub": user.username}, expires_delta=access_token_expires
+    )
+    return access_token
+
 
 # deactive user
 
@@ -87,16 +120,22 @@ def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return habits
 
 # -> update habit
+
+
 @app.post("/habit/updatehabit/", response_model=habit_schemas.Habit)
 def update_habit(habit: habit_schemas.HabitCreate, db: Session = Depends(get_db)):
     return habit_cruds.update_habit(db=db, habit=habit)
 
 # -> save habit analytics
+
+
 @app.post("/habitanalytics/savehabitanalytics/", response_model=habit_schemas.HabitAnalysisCreate)
 def create_habit(habit_analystics_create: habit_schemas.HabitAnalysisCreate, db: Session = Depends(get_db)):
     return habit_cruds.save_habitanalytics(db=db, HabitAnalysiscreating=habit_analystics_create)
 
 #  ->get all habit analytics for habitid
+
+
 @app.get("/habitanalytics/getallhabits/{habit_id}", response_model=list[habit_schemas.HabitAnalysis])
 def read_users(habit_id: int, skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     habits = habit_cruds.get_all_habits_analytics(
@@ -117,16 +156,35 @@ def read_task(user_id: int, db: Session = Depends(get_db)):
     return db_task
 
 # change pomodoro_task to completed task
+
+
 @app.patch("/pomodoro/iscompleted/{p_id}", response_model=pomodoro_task_schemas.PomodoroTask)
 def change_is_tasks_complete(p_id: int, db: Session = Depends(get_db)):
     db_task = pomodoro_task_cruds.change_is_tasks_complete(db, p_id=p_id)
     return db_task
 
 # delete pomodorotasks by pomodoro_task_id
+
+
 @app.delete("/pomodoro/deletetasks/{p_id}", response_model=str)
 def delete_tasks(p_id: int, db: Session = Depends(get_db)):
     db_task = pomodoro_task_cruds.delete_tasks(db, p_id=p_id)
     return db_task
+
+
+@app.post("user/resetpassword", response_model=user_schemas.UserLogin)
+def reset_password(user_cred: user_schemas.UserLogin, db: Session = Depends(get_db)):
+    user = user_cruds.reset_password(
+        user_cred.email, user_cred.password, db)
+    return user
+
+# send email
+
+
+@app.post("/user/sendemail/{email}/", response_model=str)
+def send_email(email: str):
+    print("hii", email)
+    return user_cruds.send_email(email)
 
 
 if __name__ == "__main__":

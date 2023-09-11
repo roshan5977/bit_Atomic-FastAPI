@@ -14,9 +14,17 @@ class UserCreate(UserBase):
     updated_by: str
 
 
+class Email(BaseModel):
+    to_email: str
+    subject: str
+    body: str
+
+
 class UserLogin(BaseModel):
     email: str
     password: str
+
+
 
 
 class User(UserBase):
