@@ -53,6 +53,29 @@ def test():
     return {"status": "success"}
 
 
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+
+async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db: Session = Depends(get_db)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, user_cruds. SECRET_KEY,
+                             algorithms=[user_cruds. ALGORITHM])
+        email: str = payload.get("sub")
+        if email is None:
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+    user = user_cruds. get_user_byemail(db=db, email=email)
+    if user is None:
+        raise credentials_exception
+    return user
+
+
 # register user
 @app.post("/user/saveusers/", response_model=user_schemas.User)
 def create_user(user: user_schemas.UserCreate, db: Session = Depends(get_db)):
@@ -65,8 +88,8 @@ def create_user(user: user_schemas.UserCreate, db: Session = Depends(get_db)):
 # get all users
 
 
-@app.get("/users/", response_model=list[user_schemas.User])
-def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+@app.get("/users/", Depends(user_cruds.get_current_active_user), response_model=list[user_schemas.User])
+def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), current_user:  user_schemas.UserCreate = Depends(get_current_user)):
     users = user_cruds.get_all_users(db, skip=skip, limit=limit)
     return users
 
@@ -94,7 +117,7 @@ def login_user(user_cred: user_schemas.UserLogin, db: Session = Depends(get_db))
     access_token_expires = timedelta(
         minutes=user_cruds.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = user_cruds.create_access_token(
-        data={"sub": user.username}, expires_delta=access_token_expires
+        data={"sub": user.email}, expires_delta=access_token_expires
     )
     return access_token
 
@@ -108,7 +131,7 @@ def deactive_user(user_id: int, db: Session = Depends(get_db)):
 
 
 # ->  save habit
-@app.post("/habit/savehabit/", response_model=habit_schemas.Habit)
+@app.post("/habit/savehabit/", response_model=habit_schemas.Habit,)
 def create_habit(habit: habit_schemas.HabitCreate, db: Session = Depends(get_db)):
     return habit_cruds.save_habit(db=db, habit=habit)
 
